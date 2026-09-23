@@ -1,0 +1,203 @@
+{
+  "generatedAt": "2026-09-23T08:32:18.417Z",
+  "results": [
+    {
+      "group": "titlebar-drag",
+      "check": "scroll-0-content-crosses-header",
+      "pass": true,
+      "innerTop": 64,
+      "innerBottom": 2064
+    },
+    {
+      "group": "titlebar-drag",
+      "check": "scroll-0-header-overlay-blank",
+      "pass": true,
+      "before": {
+        "x": 100,
+        "y": 150
+      },
+      "after": {
+        "x": 180,
+        "y": 200
+      }
+    },
+    {
+      "group": "titlebar-drag",
+      "check": "scroll-0-sidebar-overlay-blank",
+      "pass": true,
+      "before": {
+        "x": 100,
+        "y": 150
+      },
+      "after": {
+        "x": 180,
+        "y": 200
+      }
+    },
+    {
+      "group": "titlebar-drag",
+      "check": "scroll-0-direct-rail-blank",
+      "pass": true,
+      "before": {
+        "x": 100,
+        "y": 150
+      },
+      "after": {
+        "x": 180,
+        "y": 200
+      }
+    },
+    {
+      "group": "titlebar-drag",
+      "check": "scroll-0-chat-area-does-not-drag",
+      "pass": true,
+      "before": {
+        "x": 100,
+        "y": 150
+      },
+      "after": {
+        "x": 100,
+        "y": 150
+      }
+    },
+    {
+      "group": "titlebar-drag",
+      "check": "scroll-1000-content-crosses-header",
+      "pass": true,
+      "innerTop": -936,
+      "innerBottom": 1064
+    },
+    {
+      "group": "titlebar-drag",
+      "check": "scroll-1000-header-overlay-blank",
+      "pass": false,
+      "before": {
+        "x": 100,
+        "y": 150
+      },
+      "after": {
+        "x": 100,
+        "y": 150
+      }
+    },
+    {
+      "group": "titlebar-drag",
+      "check": "scroll-1000-sidebar-overlay-blank",
+      "pass": true,
+      "before": {
+        "x": 100,
+        "y": 150
+      },
+      "after": {
+        "x": 180,
+        "y": 200
+      }
+    },
+    {
+      "group": "titlebar-drag",
+      "check": "scroll-1000-direct-rail-blank",
+      "pass": true,
+      "before": {
+        "x": 100,
+        "y": 150
+      },
+      "after": {
+        "x": 180,
+        "y": 200
+      }
+    },
+    {
+      "group": "titlebar-drag",
+      "check": "scroll-1000-chat-area-does-not-drag",
+      "pass": true,
+      "before": {
+        "x": 100,
+        "y": 150
+      },
+      "after": {
+        "x": 100,
+        "y": 150
+      }
+    },
+    {
+      "group": "titlebar-drag",
+      "check": "header-button-click",
+      "pass": true,
+      "clicks": {
+        "header-btn": 1
+      },
+      "before": {
+        "x": 100,
+        "y": 150
+      },
+      "after": {
+        "x": 100,
+        "y": 150
+      }
+    },
+    {
+      "group": "titlebar-drag",
+      "check": "sidebar-tab-click",
+      "pass": true,
+      "clicks": {
+        "sidebar-btn": 1
+      },
+      "before": {
+        "x": 100,
+        "y": 150
+      },
+      "after": {
+        "x": 100,
+        "y": 150
+      }
+    },
+    {
+      "group": "titlebar-drag",
+      "check": "rail-tab-click",
+      "pass": true,
+      "clicks": {
+        "rail-btn": 1
+      },
+      "before": {
+        "x": 100,
+        "y": 150
+      },
+      "after": {
+        "x": 100,
+        "y": 150
+      }
+    },
+    {
+      "group": "titlebar-drag",
+      "check": "portal-button-click",
+      "pass": true,
+      "clicks": {
+        "portal-btn": 1
+      },
+      "before": {
+        "x": 100,
+        "y": 150
+      },
+      "after": {
+        "x": 100,
+        "y": 150
+      }
+    },
+    {
+      "group": "titlebar-drag",
+      "check": "floating-panel-button-click",
+      "pass": true,
+      "clicks": {
+        "floating-btn": 1
+      },
+      "before": {
+        "x": 100,
+        "y": 150
+      },
+      "after": {
+        "x": 100,
+        "y": 150
+      }
+    }
+  ]
+}
