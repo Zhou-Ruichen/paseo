@@ -15,18 +15,22 @@ const BASE = { x: 100, y: 150 };
 const DRAG_DELTA = { x: 80, y: 50 };
 const DRAG_POINTS = [
   { check: "header-overlay-blank", x: 625, y: 18 },
+  { check: "tab-row-overlay-blank", x: 625, y: 50 },
   { check: "sidebar-overlay-blank", x: 125, y: 18 },
   { check: "direct-rail-blank", x: 125, y: 50 },
 ];
 const CLICK_POINTS = [
   { check: "header-button-click", id: "header-btn", x: 955, y: 18 },
+  { check: "window-owned-toggle-click", id: "window-toggle", x: 40, y: 18 },
+  { check: "window-owned-focusable-click", id: "focusable", x: 320, y: 18 },
+  { check: "window-owned-negative-tabindex-button-click", id: "negative-button", x: 400, y: 18 },
   { check: "sidebar-tab-click", id: "sidebar-btn", x: 205, y: 18 },
   { check: "rail-tab-click", id: "rail-btn", x: 205, y: 50 },
   { check: "portal-button-click", id: "portal-btn", x: 490, y: 18 },
   { check: "floating-panel-button-click", id: "floating-btn", x: 785, y: 18 },
 ];
 
-/** Drag surfaces mirror titlebar-drag-region.tsx / explorer-sidebar-tab-rail.tsx. */
+/** Static overlays and a sibling window control mirror the app shell ownership. */
 function buildFixtureHtml(appStyles) {
   const dragOverlay =
     'style="position:absolute;top:0;left:0;display:block;width:100%;height:100%;-webkit-app-region:drag"';
@@ -37,18 +41,27 @@ function buildFixtureHtml(appStyles) {
 .pane{position:absolute}</style></head><body>
 <div class="pane" id="sidebar" style="left:0;top:0;width:250px;height:600px;background:#1d1d1d">
   <div class="pane" style="left:0;top:0;width:250px;height:36px">
-    <div data-titlebar-drag-region ${dragOverlay}></div>
+    <div ${dragOverlay}></div>
     ${button("sidebar-btn", "position:absolute;right:8px;top:6px;width:60px;height:24px")}
   </div>
-  <div class="pane" data-titlebar-drag-surface="true"
+  <div class="pane"
        style="left:0;top:36px;width:250px;height:28px;-webkit-app-region:drag">
     ${button("rail-btn", "position:absolute;right:8px;top:2px;width:60px;height:24px")}
   </div>
 </div>
 <div class="pane" id="header" style="left:250px;top:0;width:750px;height:36px">
-  <div data-titlebar-drag-region ${dragOverlay}></div>
+  <div ${dragOverlay}></div>
   ${button("header-btn", "position:absolute;right:8px;top:6px;width:60px;height:24px")}
 </div>
+<div class="pane" style="left:250px;top:36px;width:750px;height:28px">
+  <div ${dragOverlay}></div>
+</div>
+<!-- The sidebar toggle belongs to the window, outside every drag surface subtree. -->
+${button("window-toggle", "position:absolute;left:10px;top:6px;width:60px;height:24px;z-index:2")}
+<div id="focusable" tabindex="0" onclick="count('focusable')"
+     style="position:absolute;left:290px;top:6px;width:60px;height:24px;z-index:2">Focusable</div>
+<div id="negative-button" role="button" tabindex="-1" onclick="count('negative-button')"
+     style="position:absolute;left:370px;top:6px;width:60px;height:24px;z-index:2">Button</div>
 <div class="pane" id="chat-root" style="left:250px;top:64px;width:750px;height:536px;overflow:clip">
   <div id="scroller" tabindex="-1"
        style="width:100%;height:100%;overflow-y:auto;overflow-x:clip;outline:none">
@@ -58,7 +71,7 @@ function buildFixtureHtml(appStyles) {
 <div id="overlay-root" style="position:fixed;inset:0;pointer-events:none;z-index:9999">
   ${button("portal-btn", "position:fixed;left:460px;top:6px;width:60px;height:24px;pointer-events:auto")}
 </div>
-<div data-window-overlay style="position:fixed;inset:0;pointer-events:none;z-index:9999">
+<div style="position:fixed;inset:0;pointer-events:none;z-index:9999">
   ${button("floating-btn", "position:fixed;left:755px;top:6px;width:60px;height:24px;pointer-events:auto")}
 </div>
 <script>
@@ -181,6 +194,12 @@ async function runTitlebarDragGroup(outDir) {
       const clicked = clicks[point.id] === 1;
       const stillStationary = before.x === after.x && before.y === after.y;
       record(point.check, clicked && stillStationary, { clicks, before, after });
+      await runMouse(["drag", from.x, from.y, from.x + DRAG_DELTA.x, from.y + DRAG_DELTA.y]);
+      const afterDrag = bounds();
+      record(`${point.check}-does-not-drag`, before.x === afterDrag.x && before.y === afterDrag.y, {
+        before,
+        after: afterDrag,
+      });
     }
 
     const image = await win.webContents.capturePage();

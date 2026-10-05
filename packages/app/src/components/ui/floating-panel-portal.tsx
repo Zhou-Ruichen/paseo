@@ -10,7 +10,6 @@ import { StyleSheet, View } from "react-native";
 import { PortalHost } from "@gorhom/portal";
 
 export const DEFAULT_FLOATING_PANEL_PORTAL_HOST = "content-floating-panels";
-const PORTAL_HOST_DATASET = { windowOverlay: "true" };
 
 const FloatingPanelPortalHostNameContext = createContext(DEFAULT_FLOATING_PANEL_PORTAL_HOST);
 
@@ -74,13 +73,7 @@ export function FloatingPanelPortalHost({
   }, [name]);
 
   return (
-    <View
-      ref={hostRef}
-      collapsable={false}
-      pointerEvents="box-none"
-      style={styles.host}
-      dataSet={PORTAL_HOST_DATASET}
-    >
+    <View ref={hostRef} collapsable={false} pointerEvents="box-none" style={styles.host}>
       <PortalHost name={name} />
     </View>
   );

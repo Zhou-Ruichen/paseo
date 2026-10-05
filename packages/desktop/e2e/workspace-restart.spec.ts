@@ -130,20 +130,30 @@ function inspectChatDragExclusions(scroll: Element) {
   const focusScope = scroll.closest("[tabindex]");
   if (!content || !focusScope) throw new Error("Expected chat content and its focus scope");
   const contentRect = content.getBoundingClientRect();
+  const chatX = (contentRect.left + contentRect.right) / 2;
+  const tabRow = [...document.querySelectorAll('[data-testid="workspace-tabs-row"]')].find(
+    (row) => {
+      const rect = row.getBoundingClientRect();
+      return rect.left < chatX && rect.right > chatX && rect.height > 0;
+    },
+  );
+  if (!tabRow) throw new Error("Expected the chat pane's tab row");
+  const tabRect = tabRow.getBoundingClientRect();
+  const tabY = tabRect.top + tabRect.height / 2;
   const exclusions = [...scroll.querySelectorAll("*")].filter((element) => {
     const rect = element.getBoundingClientRect();
     const style = getComputedStyle(element);
     return (
       style.visibility === "visible" &&
       style.getPropertyValue("-webkit-app-region") === "no-drag" &&
-      rect.top < headerY &&
-      rect.bottom > headerY &&
+      ((rect.top < headerY && rect.bottom > headerY) || (rect.top < tabY && rect.bottom > tabY)) &&
       rect.right > headerRect.left &&
       rect.left < headerRect.right
     );
   });
   return {
     contentCrossesHeader: contentRect.top < headerY && contentRect.bottom > headerY,
+    contentCrossesTabRow: contentRect.top < tabY && contentRect.bottom > tabY,
     focusScopeRegion: getComputedStyle(focusScope).getPropertyValue("-webkit-app-region"),
     exclusions: exclusions.length,
   };
@@ -183,10 +193,20 @@ test("scrolled chat does not exclude the workspace titlebar from dragging", asyn
         .poll(() => chat.evaluate(inspectChatDragExclusions))
         .toEqual({
           contentCrossesHeader: true,
+          contentCrossesTabRow: true,
           focusScopeRegion: "none",
           exclusions: 0,
         });
     }
+
+    // Window-owned controls are siblings of workspace chrome, not descendants of it.
+    const closeMenu = page.getByRole("button", { name: "Close menu", exact: true });
+    await expect(closeMenu).toHaveCSS("-webkit-app-region", "no-drag");
+    await closeMenu.click();
+    const openMenu = page.getByRole("button", { name: "Open menu", exact: true });
+    await expect(openMenu).toHaveCSS("-webkit-app-region", "no-drag");
+    await openMenu.click();
+    await expect(closeMenu).toBeVisible();
 
     const menuTrigger = page.getByTestId("workspace-header-menu-trigger");
     await expect(menuTrigger).toHaveCSS("-webkit-app-region", "no-drag");
@@ -196,6 +216,33 @@ test("scrolled chat does not exclude the workspace titlebar from dragging", asyn
     await expect(menu.getByRole("menuitem").first()).toHaveCSS("-webkit-app-region", "no-drag");
     await page.keyboard.press("Escape");
     await expect(menu).toBeHidden();
+    await page.getByRole("textbox", { name: "Message agent...", exact: true }).click();
+    // installDesktopRuntime supplies a macOS bridge, including shortcut identity.
+    await page.keyboard.press("Meta+f");
+    const find = page.getByRole("textbox", { name: "Find in pane", exact: true });
+    await expect(find).toBeFocused();
+    await expect(find).toHaveCSS("-webkit-app-region", "no-drag");
+    await find.fill("Paragraph 40:");
+    await expect(page.getByRole("status", { name: "Find matches" })).toHaveText("1 of 1");
+    for (const name of ["Next match", "Previous match", "Close Find"]) {
+      await expect(page.getByRole("button", { name, exact: true })).toHaveCSS(
+        "-webkit-app-region",
+        "no-drag",
+      );
+    }
+    await page.getByRole("button", { name: "Close Find", exact: true }).click();
+    await expect(find).toBeHidden();
+    await expect
+      .poll(() =>
+        chat.evaluate((scroll) => ({
+          focusReturned: document.activeElement?.contains(scroll),
+          tabindex: document.activeElement?.getAttribute("tabindex"),
+          appRegion: getComputedStyle(document.activeElement!).getPropertyValue(
+            "-webkit-app-region",
+          ),
+        })),
+      )
+      .toEqual({ focusReturned: true, tabindex: "-1", appRegion: "none" });
     await page.screenshot({ path: testInfo.outputPath("scrolled-chat-titlebar.png") });
   } finally {
     await agent.cleanup();

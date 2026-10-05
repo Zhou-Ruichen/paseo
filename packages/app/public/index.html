@@ -51,32 +51,26 @@
       }
     </style>
     <style>
-      /* no-drag on scrolled content subtracts from drag regions even where overflow
-         clips it visually, so scope the opt-out to actual drag surfaces and portals */
-      :is(
-          :has(> [data-titlebar-drag-region]),
-          [data-titlebar-drag-surface],
-          #overlay-root,
-          [data-window-overlay]
-        )
-        :is(
-          button,
-          a,
-          input,
-          textarea,
-          select,
-          [role="button"],
-          [role="link"],
-          [role="textbox"],
-          [role="combobox"],
-          [role="tab"],
-          [role="switch"],
-          [role="checkbox"],
-          [role="slider"],
-          [role="menuitem"],
-          [tabindex],
-          [contenteditable="true"]
-        ) {
+      /* A negative tabindex on a plain container is a programmatic focus target,
+         not an interactive control. Its inherited no-drag would let scrolled chat
+         subtract from the titlebar even outside the overflow clip. Semantic
+         controls still opt out globally, regardless of tabindex or ancestry. */
+      button,
+      a,
+      input,
+      textarea,
+      select,
+      [role="button"],
+      [role="link"],
+      [role="textbox"],
+      [role="combobox"],
+      [role="tab"],
+      [role="switch"],
+      [role="checkbox"],
+      [role="slider"],
+      [role="menuitem"],
+      [tabindex]:not([tabindex="-1"]),
+      [contenteditable="true"] {
         -webkit-app-region: no-drag !important;
       }
 
