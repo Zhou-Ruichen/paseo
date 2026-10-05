@@ -63,9 +63,13 @@ ${button("window-toggle", "position:absolute;left:10px;top:6px;width:60px;height
 <div id="negative-button" role="button" tabindex="-1" onclick="count('negative-button')"
      style="position:absolute;left:370px;top:6px;width:60px;height:24px;z-index:2">Button</div>
 <div class="pane" id="chat-root" style="left:250px;top:64px;width:750px;height:536px;overflow:clip">
-  <div id="scroller" tabindex="-1"
+  <div id="scroller" tabindex="-1" data-window-content
        style="width:100%;height:100%;overflow-y:auto;overflow-x:clip;outline:none">
-    <div id="chat-inner" style="height:2000px"></div>
+    <div id="chat-inner" style="height:2000px;position:relative">
+      <a id="chat-link" href="#" onclick="event.preventDefault();count('chat-link')" style="position:absolute;left:250px;top:160px;width:180px;height:24px">Chat link</a>
+      ${button("chat-code", "position:absolute;left:250px;top:320px;width:180px;height:24px")}
+      <div id="chat-file" role="link" tabindex="0" onclick="count('chat-file')" style="position:absolute;left:250px;top:480px;width:180px;height:24px">file.ts</div>
+    </div>
   </div>
 </div>
 <div id="overlay-root" style="position:fixed;inset:0;pointer-events:none;z-index:9999">
@@ -79,6 +83,13 @@ ${button("window-toggle", "position:absolute;left:10px;top:6px;width:60px;height
   window.count = (id) => { window.__clicks[id] = (window.__clicks[id] || 0) + 1; };
   window.__fixture = {
     setScroll(value) { document.getElementById("scroller").scrollTop = value; return this.snapshot(); },
+    placeControl(id, y) {
+      const control = document.getElementById(id);
+      const rect = control.getBoundingClientRect();
+      document.getElementById("scroller").scrollTop += rect.top + rect.height / 2 - y;
+      const placed = control.getBoundingClientRect();
+      return { x: placed.left + placed.width / 2, y: placed.top + placed.height / 2 };
+    },
     snapshot() {
       const inner = document.getElementById("chat-inner").getBoundingClientRect();
       const clicks = { ...window.__clicks };
@@ -107,6 +118,10 @@ async function compileMouseHelper(outDir) {
     "ApplicationServices",
   ]);
   return binary;
+}
+
+function samePosition(before, after) {
+  return before.x === after.x && before.y === after.y;
 }
 
 async function runTitlebarDragGroup(outDir) {
@@ -174,14 +189,10 @@ async function runTitlebarDragGroup(outDir) {
       const from = mouseAt(chatPoint);
       await runMouse(["drag", from.x, from.y, from.x + DRAG_DELTA.x, from.y + DRAG_DELTA.y]);
       const after = bounds();
-      record(
-        `scroll-${scrollTop}-chat-area-does-not-drag`,
-        before.x === after.x && before.y === after.y,
-        {
-          before,
-          after,
-        },
-      );
+      record(`scroll-${scrollTop}-chat-area-does-not-drag`, samePosition(before, after), {
+        before,
+        after,
+      });
     }
 
     for (const point of CLICK_POINTS) {
@@ -192,11 +203,47 @@ async function runTitlebarDragGroup(outDir) {
       const { clicks } = await evalPage("window.__fixture.snapshot()");
       const after = bounds();
       const clicked = clicks[point.id] === 1;
-      const stillStationary = before.x === after.x && before.y === after.y;
+      const stillStationary = samePosition(before, after);
       record(point.check, clicked && stillStationary, { clicks, before, after });
       await runMouse(["drag", from.x, from.y, from.x + DRAG_DELTA.x, from.y + DRAG_DELTA.y]);
       const afterDrag = bounds();
-      record(`${point.check}-does-not-drag`, before.x === afterDrag.x && before.y === afterDrag.y, {
+      record(`${point.check}-does-not-drag`, samePosition(before, afterDrag), {
+        before,
+        after: afterDrag,
+      });
+    }
+
+    for (const id of ["chat-link", "chat-code", "chat-file"]) {
+      for (const y of [18, 50]) {
+        await resetPosition();
+        const point = await evalPage(`window.__fixture.placeControl(${JSON.stringify(id)}, ${y})`);
+        const before = bounds();
+        const from = mouseAt(point);
+        await runMouse(["drag", from.x, from.y, from.x + DRAG_DELTA.x, from.y + DRAG_DELTA.y]);
+        const after = bounds();
+        record(
+          `${id}-behind-header-${y}`,
+          after.x - before.x === DRAG_DELTA.x && after.y - before.y === DRAG_DELTA.y,
+          { before, after, point },
+        );
+      }
+      await resetPosition();
+      const point = await evalPage(`window.__fixture.placeControl(${JSON.stringify(id)}, 180)`);
+      const before = bounds();
+      const from = mouseAt(point);
+      await evalPage("window.__fixture.snapshot()");
+      await runMouse(["click", from.x, from.y]);
+      const { clicks } = await evalPage("window.__fixture.snapshot()");
+      const after = bounds();
+      record(`${id}-visible-click`, clicks[id] === 1 && samePosition(before, after), {
+        clicks,
+        before,
+        after,
+        point,
+      });
+      await runMouse(["drag", from.x, from.y, from.x + DRAG_DELTA.x, from.y + DRAG_DELTA.y]);
+      const afterDrag = bounds();
+      record(`${id}-visible-does-not-drag`, samePosition(before, afterDrag), {
         before,
         after: afterDrag,
       });

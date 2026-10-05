@@ -165,7 +165,7 @@ test("scrolled chat does not exclude the workspace titlebar from dragging", asyn
   const response = Array.from(
     { length: 80 },
     (_, index) =>
-      `Paragraph ${index}: a long conversation keeps the chat scrolled below its first message.`,
+      `Paragraph ${index}: a long conversation keeps the chat scrolled below its first message.\n\n[Drag reference](https://example.com) and [file.ts](./file.ts)\n\n\`\`\`ts\nconst item = ${index};\n\`\`\``,
   ).join("\n\n");
   const agent = await seedMockAgentWorkspace({
     repoPrefix: "desktop-scrolled-chat-",
@@ -194,7 +194,7 @@ test("scrolled chat does not exclude the workspace titlebar from dragging", asyn
         .toEqual({
           contentCrossesHeader: true,
           contentCrossesTabRow: true,
-          focusScopeRegion: "none",
+          focusScopeRegion: "no-drag",
           exclusions: 0,
         });
     }
@@ -242,7 +242,7 @@ test("scrolled chat does not exclude the workspace titlebar from dragging", asyn
           ),
         })),
       )
-      .toEqual({ focusReturned: true, tabindex: "-1", appRegion: "none" });
+      .toEqual({ focusReturned: true, tabindex: "-1", appRegion: "no-drag" });
     await page.screenshot({ path: testInfo.outputPath("scrolled-chat-titlebar.png") });
   } finally {
     await agent.cleanup();

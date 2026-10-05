@@ -51,10 +51,6 @@
       }
     </style>
     <style>
-      /* A negative tabindex on a plain container is a programmatic focus target,
-         not an interactive control. Its inherited no-drag would let scrolled chat
-         subtract from the titlebar even outside the overflow clip. Semantic
-         controls still opt out globally, regardless of tabindex or ancestry. */
       button,
       a,
       input,
@@ -69,9 +65,18 @@
       [role="checkbox"],
       [role="slider"],
       [role="menuitem"],
-      [tabindex]:not([tabindex="-1"]),
+      [tabindex],
       [contenteditable="true"] {
         -webkit-app-region: no-drag !important;
+      }
+
+      /* Electron does not clip app-region rectangles to scroll viewports.
+         Content-only viewports emit no window regions, including from their
+         controls. Visible controls here use normal DOM hit testing.
+         Use initial: Blink parses the explicit value none as no-drag. */
+      [data-window-content],
+      [data-window-content] * {
+        -webkit-app-region: initial !important;
       }
 
       /* Suppress the browser's default focus outline — it appears on mouse
